@@ -25,7 +25,7 @@ class PseudoCDump(BackgroundTaskThread):
     FILE_SUFFIX = 'c'
 
     def __init__(self, bv: BinaryView, msg: str, destination_path: str):
-        BackgroundTaskThread.__init__(self, msg, True)
+        BackgroundTaskThread.__init__(self, msg, can_cancel=True)
         self.bv = bv
         self.destination_path = destination_path
 
@@ -56,7 +56,8 @@ class PseudoCDump(BackgroundTaskThread):
         for function in self.bv.functions:
             function_name = self._get_function_name(function)
             log_info(f'Dumping function {function_name}')
-            self.progress = "Dumping Pseudo C: %d/%d" %(count, len(self.bv.functions))
+            self.progress = "Dumping Pseudo C: %d/%d" % (
+                count, len(self.bv.functions))
             force_analysis(self.bv, function)
             pcode = get_pseudo_c(self.bv, function)
             destination = os.path.join(
@@ -66,6 +67,7 @@ class PseudoCDump(BackgroundTaskThread):
                 file.write(bytes(pcode, 'utf-8'))
             count += 1
         log_alert('Done')
+
 
 def normalize_destination_file(destination_file: str,
                                filename_suffix: str) -> str:
@@ -83,7 +85,8 @@ def normalize_destination_file(destination_file: str,
 def force_analysis(bv: BinaryView, function: Function):
     ''' Force analysis of the function if Binja skipped it'''
     if function is not None and function.analysis_skipped:
-        log_warn(''
+        log_warn(
+            ''
             f'Analyzing skipped function {bv.get_symbol_at(function.start)}')
         function.analysis_skip_override = FunctionAnalysisSkipOverride.NeverSkipFunctionAnalysis
         bv.update_analysis_and_wait()
@@ -93,6 +96,7 @@ def get_pseudo_c(bv: BinaryView, function: Function) -> str:
     lines = []
     settings = DisassemblySettings()
     settings.set_option(DisassemblyOption.ShowAddress, False)
+    settings.set_option(DisassemblyOption.WaitForIL, True)
     obj = LinearViewObject.language_representation(bv, settings)
     cursor_end = LinearViewCursor(obj)
     cursor_end.seek_to_address(function.highest_address)
@@ -110,12 +114,12 @@ def get_pseudo_c(bv: BinaryView, function: Function) -> str:
     return (lines_of_code)
 
 
-def dump_pseudo_c(bv: BinaryView, action: str) -> None:
+def dump_pseudo_c(bv: BinaryView, action: int) -> None:
     destination_path = get_directory_name_input('Destination')
 
     if destination_path == None:
         log_error(''
-            'No directory was provided to save the decompiled Pseudo C')
+                  'No directory was provided to save the decompiled Pseudo C')
         return
 
     dump = PseudoCDump(bv, 'Starting the Pseudo C Dump..', destination_path)
