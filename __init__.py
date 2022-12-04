@@ -1,6 +1,6 @@
 #
 # Description:  Binary Ninja plugin to decompile all the codebase in Pseudo C
-# and dump it into a given directory, though File / Export will also work for some
+# and dump it into a given directory, though File -> Export would also work for some
 # cases instead of using this plugin, depending on what you are trying to achieve.
 #
 # Author: Asher Davila (@asher_davila)
