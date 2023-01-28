@@ -7,9 +7,12 @@
 # https://github.com/AsherDLL/PCDump-bn
 #
 
+import calendar
+import ntpath
 import os
 import platform
 import re
+import time
 
 from binaryninja.binaryview import BinaryView
 from binaryninja.enums import DisassemblyOption, FunctionAnalysisSkipOverride
@@ -85,12 +88,26 @@ class PseudoCDump(BackgroundTaskThread):
                                  f'sub_{function.start:x}\n'
                                  'Try using a different path')
 
+    def __create_directory(self) -> str:
+        """This function creates a new directory with a name that is based on
+        the name of the file that is being processed and the current time, and
+        returns the path of the new directory.
+        """
+        directory_name = ''.join(
+            (f'PseudoCDump_{ntpath.basename(self.bv.file.filename)}_',
+             str(calendar.timegm(time.gmtime()))))
+        new_directory = os.path.join(self.destination_path, directory_name)
+        os.mkdir(new_directory)
+
+        return new_directory
+
     def run(self) -> None:
         """Method representing the thread's activity. It invokes the callable
         object passed to the object's constructor as the target argument.
         Additionally, writes the content of each function into a <function_name>.c
         file in the provided destination folder.
         """
+        self.destination_path = self.__create_directory()
         log_info(f'Number of functions to dump: {len(self.bv.functions)}')
         count = 1
         for function in self.bv.functions:
@@ -106,7 +123,7 @@ class PseudoCDump(BackgroundTaskThread):
             with open(destination, 'wb') as file:
                 file.write(bytes(pcode, 'utf-8'))
             count += 1
-        log_alert('Done')
+        log_alert(f'Done \nFiles saved in {self.destination_path}')
 
 
 def normalize_destination_file(destination_file: str,
