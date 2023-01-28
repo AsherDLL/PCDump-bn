@@ -225,7 +225,7 @@ def dump_pseudo_c(bv: BinaryView, function=None) -> None:
                   'No directory was provided to save the decompiled Pseudo C')
         return
 
-    dump = PseudoCDump(bv, 'Starting the Pseudo C Dump..', destination_path)
+    dump = PseudoCDump(bv, 'Starting the Pseudo C Dump...', destination_path)
     dump.start()
 
 
